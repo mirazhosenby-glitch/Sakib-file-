@@ -1,0 +1,193 @@
+# ROLE
+You are an expert **Senior PHP Developer** with deep technical experience in Telegram Bot API integration and MySQL database architecture.
+
+# TASK
+Your task is to build **Earning Zone BD** — a Telegram Task & Earn (USDT) Bot
+for **a production cPanel shared-hosting deployment** with extreme accuracy.
+
+# IMPORTANT CLARIFICATION (STRICT)
+❌ This is **NOT** a Telegram Mini App.
+❌ Do NOT build any Web App (`WebApp`), inline browser UI, or HTML-based Telegram interface.
+✅ This is a **fully text/button-based Telegram Bot**, operated entirely through native Telegram chat messages, Reply Keyboards, and Inline Keyboards.
+✅ The **only web page** allowed in this project is the **Admin Panel**, which is accessed separately via browser by the admin — never linked inside the bot as a Mini App.
+
+# LANGUAGE MODE (STRICT)
+
+You MUST write ALL code, ALL logic, ALL files ONLY in:
+➡️ **PHP 8.2+**
+
+❌ You are NOT allowed to use any other languages, frameworks, or syntaxes.
+❌ Do NOT auto-select alternatives.
+❌ Follow EXACTLY what is specified.
+
+# TECH STACK (STRICT)
+Use ONLY the following technologies:
+✅ **PHP (PDO, MySQLi disabled — PDO only)**
+✅ **MySQL**
+✅ **Bootstrap 5, HTML, CSS, Vanilla JavaScript (Admin Panel only)**
+✅ **Telegram Bot API (Webhook mode)**
+
+DO NOT use under any circumstances:
+❌ **Laravel, CodeIgniter, Symfony, or any PHP framework**
+❌ **Node.js, Python, or any non-PHP backend language**
+❌ **Telegram WebApp / Mini App SDK**
+❌ Any auto-suggested libraries
+❌ Any AI-selected replacements
+
+If something is missing, STILL continue using ONLY the approved tech.
+
+# BOT IDENTITY
+- **Bot Name:** Earning Zone BD
+- Bot display name, welcome messages, and all user-facing text must reference **"Earning Zone BD"**
+- Example welcome text: `"Welcome to Earning Zone BD! Complete tasks and earn USDT."`
+
+# FOLDER STRUCTURE
+Create the following EXACT structure:
+📁 **earning-zone-bd**
+┣ 📄 **config.php**
+┣ 📄 **webhook.php**
+┣ 📁 **bot**
+┃ ┣ 📄 **Bot.php**
+┃ ┣ 📄 **Commands.php**
+┃ ┣ 📄 **Keyboards.php**
+┃ ┗ 📄 **Verification.php**
+┣ 📁 **core**
+┃ ┣ 📄 **Database.php**
+┃ ┣ 📄 **User.php**
+┃ ┣ 📄 **Task.php**
+┃ ┣ 📄 **Wallet.php**
+┃ ┣ 📄 **Withdrawal.php**
+┃ ┣ 📄 **Referral.php**
+┃ ┗ 📄 **Security.php**
+┣ 📁 **admin**
+┃ ┣ 📄 **login.php**
+┃ ┣ 📄 **dashboard.php**
+┃ ┣ 📄 **users.php**
+┃ ┣ 📄 **tasks.php**
+┃ ┣ 📄 **withdrawals.php**
+┃ ┣ 📄 **broadcast.php**
+┃ ┣ 📄 **settings.php**
+┃ ┗ 📄 **logout.php**
+┣ 📁 **assets**
+┃ ┣ 📄 **admin.css**
+┃ ┗ 📄 **admin.js**
+┣ 📄 **database.sql**
+┗ 📄 **README.md**
+
+No extra folders.
+No renaming.
+No additional files unless specified.
+
+# FEATURES (STRICT STEPS)
+
+### **User Registration:**
+Step 1 → Detect `/start` command via webhook
+Step 2 → Check if `telegram_id` exists in `users` table
+Step 3 → If not, insert new user record with referral tracking from `/start <ref_id>` payload
+Step 4 → Send **"Welcome to Earning Zone BD"** message with Main Menu Reply Keyboard
+
+### **Force Join Verification:**
+Step 1 → Fetch active channels/groups from `channels` table
+Step 2 → Call `getChatMember` API for each channel against the user
+Step 3 → If not joined, block bot usage and show join buttons (Inline Keyboard, opens channel directly in Telegram) + "🔄 Recheck" button
+Step 4 → On Recheck, re-verify and unlock bot if all joined
+
+### **Task Completion:**
+Step 1 → List active, non-expired tasks from `tasks` table via Inline Keyboard buttons
+Step 2 → On task click, show task details with a verification button (opens link/channel directly inside Telegram)
+Step 3 → Verify completion based on `verification_method` (channel join, bot start, link click)
+Step 4 → Check `task_completions` table to block duplicate claims
+Step 5 → Credit reward to user balance and insert completion record
+
+### **Withdrawal Request:**
+Step 1 → User selects network (TRC20/BEP20) via Inline Keyboard and enters wallet address as plain text message
+Step 2 → Validate wallet address format
+Step 3 → Check balance against min/max withdrawal limits from `settings`
+Step 4 → Insert into `withdrawals` table with status `pending`
+Step 5 → Admin approves/rejects/marks paid via Admin Panel
+Step 6 → Notify user of status change via bot message
+
+### **Referral System:**
+Step 1 → Generate unique referral link using bot username + `telegram_id` (format: `https://t.me/<bot_username>?start=<telegram_id>`)
+Step 2 → On new user registration via referral link, insert into `referrals` table
+Step 3 → Credit referral bonus to referrer's balance
+Step 4 → Notify referrer of new referral via bot message
+
+### **Daily Bonus:**
+
+Step 1 → Check `last_bonus_claim` timestamp for user
+Step 2 → If 24 hours have passed, allow claim via "🎁 Daily Bonus" menu button
+Step 3 → Credit configured bonus amount and update timestamp
+Step 4 → Log claim in `transactions` table
+
+### **Admin Broadcast:**
+Step 1 → Admin composes message (text/photo/video/document) with optional inline buttons via Admin Panel
+Step 2 → Fetch all active user `telegram_id`s from `users` table
+Step 3 → Loop and send via Telegram Bot API with rate-limit delay
+Step 4 → Log success/failure counts in `broadcast_logs` table
+
+Follow steps EXACTLY and do not add anything outside these steps.
+
+# DATABASE STRUCTURE
+Use ONLY this database layout:
+- **admins** (id, username, password_hash, created_at)
+- **users** (id, telegram_id, username, first_name, balance, total_earned, referral_earnings, referred_by, is_banned, last_bonus_claim, created_at)
+- **tasks** (id, title, description, reward, verification_method, target_url, status, daily_limit, total_limit, expires_at, created_at)
+- **task_completions** (id, user_id, task_id, completed_at)
+- **withdrawals** (id, user_id, amount, network, wallet_address, status, txid, created_at, updated_at)
+- **transactions** (id, user_id, type, amount, description, created_at)
+- **referrals** (id, referrer_id, referred_id, bonus_amount, created_at)
+- **channels** (id, chat_id, title, invite_link, type, is_active)
+- **settings** (id, key_name, value)
+- **notifications** (id, user_id, message, is_read, created_at)
+- **activity_logs** (id, admin_id, action, details, created_at)
+- **broadcast_logs** (id, admin_id, total_sent, total_failed, created_at)
+
+Do NOT add extra columns, extra tables, or alter formatting.
+
+# RULES (VERY STRICT)
+✅ Follow EXACT format
+✅ Follow ONLY approved language & tech
+✅ Bot must remain a pure chat-based Telegram Bot — no Mini App, no WebApp button, no embedded browser UI anywhere in user-facing flow
+❌ Do NOT add comments unless asked
+❌ Do NOT optimize code beyond instructions
+❌ Do NOT change structure, filenames, or logic
+❌ Do NOT add dependencies that are not listed
+
+# OUTPUT REQUIREMENTS
+Generate ONLY the following files with full production-ready code:
+
+- **config.php** → full code
+- **webhook.php** → full code
+- **bot/Bot.php** → full code
+- **bot/Commands.php** → full code
+- **bot/Keyboards.php** → full code
+- **bot/Verification.php** → full code
+- **core/Database.php** → full code
+- **core/User.php** → full code
+- **core/Task.php** → full code
+- **core/Wallet.php** → full code
+- **core/Withdrawal.php** → full code
+- **core/Referral.php** → full code
+- **core/Security.php** → full code
+- **admin/login.php** → full code
+- **admin/dashboard.php** → full code
+- **admin/users.php** → full code
+- **admin/tasks.php** → full code
+- **admin/withdrawals.php** → full code
+- **admin/broadcast.php** → full code
+- **admin/settings.php** → full code
+- **admin/logout.php** → full code
+- **assets/admin.css** → full code
+- **assets/admin.js** → full code
+- **database.sql** → full code
+- **README.md** → full code
+
+Additionally, generate:
+- UI Screens (Admin Panel only, using ONLY the approved language/tech)
+- Functional logic
+- Workflow instructions
+- Integration steps
+
+DO NOT output anything outside these requirements.
+DO NOT insert explanations unless requested.
